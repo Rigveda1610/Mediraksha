@@ -1,0 +1,1047 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>MediRaksha — AI Medical Report Summarizer</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,500&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --navy:#0a1628; --teal:#0e7c7b; --teal-l:#14a8a7;
+  --teal-glow:rgba(14,124,123,.18); --gold:#c9a84c; --gold-l:#e8c97a;
+  --white:#f4f8fb; --muted:#8ba5bf; --card:rgba(13,31,60,.72);
+  --border:rgba(14,124,123,.28); --success:#2ecc71; --error:#e74c3c;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(ellipse 80% 60% at 10% 20%,rgba(14,124,123,.12) 0%,transparent 60%),
+             radial-gradient(ellipse 60% 80% at 90% 80%,rgba(201,168,76,.06) 0%,transparent 60%)}
+.wrap{position:relative;z-index:1;max-width:1040px;margin:0 auto;padding:0 22px}
+
+/* ── HEADER ── */
+header{padding:22px 0 16px;border-bottom:1px solid var(--border)}
+.hdr{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.logo{display:flex;align-items:center;gap:12px}
+.logo-icon{width:42px;height:42px;background:linear-gradient(135deg,var(--teal),var(--teal-l));
+  border-radius:11px;display:flex;align-items:center;justify-content:center;
+  font-size:19px;box-shadow:0 0 16px var(--teal-glow)}
+.logo h1{font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:700;line-height:1}
+.logo h1 span{color:var(--teal-l)}
+.logo p{font-size:.68rem;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;margin-top:2px;font-weight:500}
+.badge{display:flex;align-items:center;gap:7px;background:rgba(14,124,123,.1);
+  border:1px solid var(--border);border-radius:100px;padding:6px 14px;
+  font-size:.72rem;color:var(--teal-l);font-weight:500}
+.dot{width:7px;height:7px;background:var(--teal-l);border-radius:50%;
+  animation:pulse 2s ease infinite;box-shadow:0 0 5px var(--teal-l)}
+
+/* ── HERO ── */
+.hero{padding:42px 0 26px;text-align:center}
+.hero-tag{display:inline-flex;align-items:center;gap:7px;
+  background:rgba(201,168,76,.08);border:1px solid rgba(201,168,76,.2);
+  border-radius:100px;padding:5px 16px;font-size:.71rem;color:var(--gold-l);
+  letter-spacing:.1em;font-weight:500;margin-bottom:16px;text-transform:uppercase}
+.hero h2{font-family:'Playfair Display',serif;font-size:clamp(1.7rem,4vw,2.7rem);
+  font-weight:700;line-height:1.18;max-width:660px;margin:0 auto 13px}
+.hero h2 em{font-style:italic;color:var(--teal-l)}
+.hero p{color:var(--muted);max-width:480px;margin:0 auto;line-height:1.72;font-size:.91rem;font-weight:300}
+
+/* ── STEPS ── */
+.steps{display:flex;align-items:center;justify-content:center;
+  margin:30px 0 24px;flex-wrap:wrap;gap:4px 0}
+.step{display:flex;align-items:center;gap:7px}
+.step:not(:last-child)::after{content:'';display:block;width:38px;height:1px;
+  background:linear-gradient(90deg,var(--border),transparent);margin:0 4px}
+.snum{width:30px;height:30px;border-radius:50%;border:1.5px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-size:.76rem;font-family:'DM Mono',monospace;color:var(--muted);transition:all .3s}
+.step.active .snum{background:var(--teal);border-color:var(--teal);color:#fff;box-shadow:0 0 11px var(--teal-glow)}
+.step.done   .snum{background:rgba(46,204,113,.15);border-color:var(--success);color:var(--success)}
+.slbl{font-size:.7rem;color:var(--muted);font-weight:500;white-space:nowrap}
+.step.active .slbl{color:var(--teal-l)}.step.done .slbl{color:var(--success)}
+
+/* ── CARD ── */
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;
+  overflow:hidden;backdrop-filter:blur(16px);box-shadow:0 18px 64px rgba(0,0,0,.38)}
+.card-hdr{padding:16px 22px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;background:rgba(14,124,123,.05)}
+.card-hdr-l{display:flex;align-items:center;gap:10px}
+.card-ico{width:32px;height:32px;background:rgba(14,124,123,.12);border:1px solid var(--border);
+  border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px}
+.card-t{font-size:.86rem;font-weight:600}.card-s{font-size:.7rem;color:var(--muted);margin-top:2px}
+.card-body{padding:22px}
+.tag-teal{display:inline-block;padding:2px 8px;background:rgba(14,124,123,.12);
+  border:1px solid rgba(14,124,123,.25);border-radius:4px;color:var(--teal-l);
+  font-size:.68rem;font-family:'DM Mono',monospace}
+
+/* ── PROVIDER PANEL ── */
+.api-panel{background:rgba(10,22,40,.65);border:1px solid var(--border);
+  border-radius:13px;padding:18px 18px;margin-bottom:18px}
+.panel-title{font-size:.72rem;font-weight:600;color:var(--muted);
+  letter-spacing:.1em;text-transform:uppercase;margin-bottom:13px}
+.prov-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:15px}
+@media(max-width:520px){.prov-grid{grid-template-columns:1fr}}
+.prov-card{border:1.5px solid var(--border);border-radius:10px;padding:11px 13px;
+  cursor:pointer;transition:all .22s;background:transparent;position:relative}
+.prov-card:hover{border-color:var(--teal);background:rgba(14,124,123,.04)}
+.prov-card.sel{border-color:var(--teal-l);background:rgba(14,124,123,.09);
+  box-shadow:0 0 0 1px var(--teal) inset}
+.prov-top{display:flex;align-items:center;gap:8px;margin-bottom:5px}
+.prov-ico{width:26px;height:26px;border-radius:6px;display:flex;
+  align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.prov-ico.g{background:linear-gradient(135deg,#4285f4,#34a853)}
+.prov-ico.q{background:linear-gradient(135deg,#f55036,#ff8a00)}
+.prov-ico.c{background:linear-gradient(135deg,#c9784a,#d4956a)}
+.prov-name{font-size:.83rem;font-weight:600}
+.prov-badge{font-size:.6rem;font-weight:700;padding:1px 6px;border-radius:4px;
+  letter-spacing:.06em;text-transform:uppercase;margin-top:1px;display:inline-block}
+.prov-badge.free{background:rgba(46,204,113,.14);color:#2ecc71;border:1px solid rgba(46,204,113,.28)}
+.prov-badge.paid{background:rgba(201,168,76,.12);color:var(--gold-l);border:1px solid rgba(201,168,76,.25)}
+.prov-model{font-size:.7rem;color:var(--muted);margin-bottom:2px}
+.prov-limit{font-size:.67rem;color:rgba(139,165,191,.65)}
+.sel-dot{position:absolute;top:8px;right:8px;width:7px;height:7px;
+  background:var(--teal-l);border-radius:50%;display:none;box-shadow:0 0 5px var(--teal-l)}
+.prov-card.sel .sel-dot{display:block}
+
+.key-row{display:flex;gap:8px;align-items:center}
+.key-inp{flex:1;background:rgba(10,22,40,.7);border:1px solid var(--border);
+  border-radius:8px;color:var(--white);font-family:'DM Mono',monospace;
+  font-size:.81rem;padding:10px 13px;outline:none;transition:border-color .25s,box-shadow .25s}
+.key-inp::placeholder{color:var(--muted);opacity:.5}
+.key-inp:focus{border-color:var(--teal);box-shadow:0 0 0 3px var(--teal-glow)}
+.icon-btn{background:rgba(14,124,123,.1);border:1px solid var(--border);
+  border-radius:7px;color:var(--muted);cursor:pointer;padding:10px 12px;
+  font-size:13px;transition:all .2s;flex-shrink:0}
+.icon-btn:hover{background:rgba(14,124,123,.22);color:var(--white)}
+.save-btn{background:var(--teal);border:none;border-radius:7px;color:#fff;
+  cursor:pointer;padding:10px 16px;font-size:.78rem;font-weight:600;
+  font-family:'DM Sans',sans-serif;transition:all .2s;flex-shrink:0}
+.save-btn:hover{background:var(--teal-l)}
+.key-hint{font-size:.69rem;color:var(--muted);margin-top:7px;line-height:1.6}
+.key-hint a{color:var(--teal-l);text-decoration:none}.key-hint a:hover{text-decoration:underline}
+.key-ok{color:var(--success);font-size:.69rem;margin-top:5px;display:none}
+.key-ok.show{display:block}
+
+/* ── UPLOAD ── */
+.upload-zone{border:2px dashed var(--border);border-radius:11px;padding:34px 18px;
+  text-align:center;cursor:pointer;transition:all .28s;position:relative;overflow:hidden}
+.upload-zone:hover,.upload-zone.drag{border-color:var(--teal-l);background:rgba(14,124,123,.04)}
+.upload-ico{width:54px;height:54px;background:rgba(14,124,123,.1);
+  border:1px solid rgba(14,124,123,.25);border-radius:50%;
+  margin:0 auto 13px;display:flex;align-items:center;justify-content:center;
+  font-size:22px;transition:transform .3s,box-shadow .3s}
+.upload-zone:hover .upload-ico{transform:translateY(-3px);box-shadow:0 9px 22px var(--teal-glow)}
+.upload-zone h3{font-size:.92rem;font-weight:500;margin-bottom:4px}
+.upload-zone p{font-size:.79rem;color:var(--muted)}
+.upload-zone p span{color:var(--teal-l);font-weight:500}
+#fileInput{display:none}
+.file-chip{display:inline-flex;align-items:center;gap:7px;
+  background:rgba(14,124,123,.12);border:1px solid var(--border);
+  border-radius:6px;padding:6px 11px;font-size:.78rem;color:var(--teal-l);
+  margin-top:11px;font-family:'DM Mono',monospace}
+.rm{width:16px;height:16px;background:rgba(231,76,60,.14);border:none;
+  border-radius:50%;color:#e74c3c;cursor:pointer;display:flex;
+  align-items:center;justify-content:center;font-size:9px}
+.rm:hover{background:rgba(231,76,60,.3)}
+
+/* ── TEXTAREA ── */
+.divider{display:flex;align-items:center;gap:10px;color:var(--muted);
+  font-size:.71rem;letter-spacing:.1em;text-transform:uppercase;margin:16px 0;font-weight:500}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border)}
+textarea{width:100%;background:rgba(10,22,40,.5);border:1px solid var(--border);
+  border-radius:9px;color:var(--white);font-family:'DM Sans',sans-serif;
+  font-size:.84rem;line-height:1.7;padding:13px 15px;resize:vertical;
+  min-height:130px;outline:none;transition:border-color .28s,box-shadow .28s}
+textarea::placeholder{color:var(--muted);opacity:.55}
+textarea:focus{border-color:var(--teal);box-shadow:0 0 0 3px var(--teal-glow)}
+.char-c{font-size:.69rem;color:var(--muted);text-align:right;
+  margin-top:4px;font-family:'DM Mono',monospace}
+
+/* ── LANGUAGE ── */
+.lang-sec{margin-top:20px}
+.sec-lbl{font-size:.73rem;font-weight:600;color:var(--muted);
+  letter-spacing:.1em;text-transform:uppercase;margin-bottom:9px}
+.lang-grid{display:flex;flex-wrap:wrap;gap:6px}
+.lang-btn{padding:6px 13px;border-radius:7px;border:1px solid var(--border);
+  background:transparent;color:var(--muted);font-family:'DM Sans',sans-serif;
+  font-size:.79rem;cursor:pointer;transition:all .2s;font-weight:500}
+.lang-btn:hover{border-color:var(--teal);color:var(--teal-l);background:rgba(14,124,123,.05)}
+.lang-btn.sel{background:var(--teal);border-color:var(--teal);
+  color:#fff;box-shadow:0 4px 11px var(--teal-glow)}
+
+/* ── BUTTONS ── */
+.submit-row{margin-top:22px;display:flex;justify-content:flex-end;
+  align-items:center;gap:11px;flex-wrap:wrap}
+.btn-p{display:inline-flex;align-items:center;gap:7px;
+  background:linear-gradient(135deg,var(--teal),var(--teal-l));color:#fff;
+  border:none;border-radius:9px;padding:11px 22px;font-family:'DM Sans',sans-serif;
+  font-size:.86rem;font-weight:600;cursor:pointer;transition:all .26s;
+  box-shadow:0 6px 18px var(--teal-glow)}
+.btn-p:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 11px 26px rgba(14,124,123,.3)}
+.btn-p:disabled{opacity:.42;cursor:not-allowed}
+.btn-s{display:inline-flex;align-items:center;gap:7px;background:transparent;
+  color:var(--muted);border:1px solid var(--border);border-radius:9px;
+  padding:10px 17px;font-family:'DM Sans',sans-serif;font-size:.84rem;
+  font-weight:500;cursor:pointer;transition:all .2s}
+.btn-s:hover{color:var(--white);border-color:rgba(255,255,255,.2)}
+.btn-dl{display:inline-flex;align-items:center;gap:7px;
+  background:linear-gradient(135deg,var(--gold),var(--gold-l));color:#0a1628;
+  border:none;border-radius:9px;padding:10px 20px;font-family:'DM Sans',sans-serif;
+  font-size:.84rem;font-weight:700;cursor:pointer;transition:all .26s;
+  box-shadow:0 6px 18px rgba(201,168,76,.2)}
+.btn-dl:hover{transform:translateY(-2px);box-shadow:0 11px 24px rgba(201,168,76,.3)}
+
+/* ── ERRORS ── */
+.err{background:rgba(231,76,60,.09);border:1px solid rgba(231,76,60,.28);
+  border-radius:9px;padding:13px 17px;font-size:.82rem;color:#e74c3c;
+  margin-bottom:15px;display:none}
+.err.show{display:block}
+
+/* ── LOADING ── */
+.loading{display:none;flex-direction:column;align-items:center;padding:52px 22px;gap:18px}
+.loading.show{display:flex}
+.spin svg{animation:spin 1.5s linear infinite}
+.load-t{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:600}
+.load-s{font-size:.79rem;color:var(--muted);font-weight:300;text-align:center}
+.prog-wrap{width:250px;height:3px;background:rgba(255,255,255,.06);
+  border-radius:4px;overflow:hidden}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--teal),var(--teal-l));
+  width:0%;transition:width .45s;box-shadow:0 0 7px var(--teal-l)}
+.prog-steps{display:flex;flex-direction:column;gap:6px;min-width:230px}
+.ps{display:flex;align-items:center;gap:7px;font-size:.77rem;color:var(--muted);transition:color .28s}
+.ps.act{color:var(--teal-l)}.ps.done{color:var(--success)}
+.ps-ico{width:18px;height:18px;border-radius:50%;border:1.5px solid currentColor;
+  display:flex;align-items:center;justify-content:center;font-size:7px;flex-shrink:0}
+.ps.act .ps-ico{animation:pulseB 1.2s ease infinite}
+
+/* ── RESULTS ── */
+.results{display:none}.results.show{display:block}
+.hl-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));
+  gap:9px;margin-bottom:16px}
+.hl{background:rgba(10,22,40,.5);border:1px solid var(--border);
+  border-radius:10px;padding:11px 13px;display:flex;align-items:flex-start;gap:8px}
+.hl-ico{font-size:16px;flex-shrink:0;margin-top:1px}
+.hl-t h5{font-size:.67rem;color:var(--muted);font-weight:500;
+  letter-spacing:.06em;text-transform:uppercase;margin-bottom:2px}
+.hl-t p{font-size:.79rem;font-weight:600;color:var(--white);line-height:1.3}
+.r-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:15px}
+@media(max-width:580px){.r-grid{grid-template-columns:1fr}}
+.r-card{background:rgba(10,22,40,.5);border:1px solid var(--border);border-radius:11px;overflow:hidden}
+.r-card-h{padding:11px 15px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:7px;background:rgba(14,124,123,.05)}
+.r-card-h h4{font-size:.81rem;font-weight:600}
+.r-card-b{padding:15px;font-size:.81rem;line-height:1.7;
+  color:rgba(244,248,251,.85);max-height:210px;overflow-y:auto;font-weight:300}
+.r-card-b::-webkit-scrollbar{width:3px}
+.r-card-b::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+.pdf-prev{border:1px solid var(--border);border-radius:11px;overflow:hidden;margin-bottom:15px}
+.pdf-tb{background:rgba(10,22,40,.7);padding:9px 15px;display:flex;
+  align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)}
+.pdf-tb-l{display:flex;align-items:center;gap:7px;font-size:.76rem;
+  color:var(--muted);font-family:'DM Mono',monospace}
+.pdf-body{background:#141c2e;padding:22px;font-size:.79rem;line-height:1.7;
+  color:rgba(244,248,251,.8);max-height:250px;overflow-y:auto}
+.pdf-body h3{font-family:'Playfair Display',serif;font-size:.97rem;
+  margin-bottom:5px;color:var(--teal-l)}
+.pdf-meta{font-size:.67rem;color:var(--muted);font-family:'DM Mono',monospace;
+  margin-bottom:11px;padding-bottom:9px;border-bottom:1px solid var(--border)}
+.pdf-sec{margin-bottom:10px}
+.pdf-sec h4{font-size:.71rem;text-transform:uppercase;letter-spacing:.1em;
+  color:var(--gold-l);margin-bottom:4px;font-weight:600}
+.dl-row{display:flex;gap:9px;flex-wrap:wrap;padding:16px 0 0;border-top:1px solid var(--border)}
+
+/* ── FEATURES ── */
+.features{display:grid;grid-template-columns:repeat(3,1fr);gap:13px;margin-top:26px}
+@media(max-width:560px){.features{grid-template-columns:1fr}}
+.feat{background:var(--card);border:1px solid var(--border);border-radius:13px;
+  padding:18px 16px;backdrop-filter:blur(12px);transition:transform .26s,border-color .26s}
+.feat:hover{transform:translateY(-3px);border-color:rgba(14,124,123,.4)}
+.feat-ico{font-size:20px;margin-bottom:9px}
+.feat h4{font-size:.83rem;font-weight:600;margin-bottom:5px}
+.feat p{font-size:.75rem;color:var(--muted);line-height:1.6;font-weight:300}
+
+/* ── FOOTER ── */
+footer{border-top:1px solid var(--border);margin-top:46px;padding:20px 0;
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:9px}
+footer p{font-size:.73rem;color:var(--muted)}
+footer span{color:var(--teal-l);font-weight:500}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:22px;right:22px;background:#0d1f3c;
+  border:1px solid var(--border);border-radius:10px;padding:11px 15px;
+  display:flex;align-items:center;gap:9px;font-size:.81rem;
+  box-shadow:0 13px 38px rgba(0,0,0,.38);z-index:1000;
+  transform:translateY(88px);opacity:0;
+  transition:all .36s cubic-bezier(.175,.885,.32,1.275);max-width:310px}
+.toast.show{transform:translateY(0);opacity:1}
+
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.75)}}
+@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+@keyframes pulseB{0%,100%{box-shadow:0 0 0 0 rgba(14,124,123,.4)}50%{box-shadow:0 0 0 4px rgba(14,124,123,0)}}
+@keyframes slideIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.qa-msg{padding:9px 13px;border-radius:9px;font-size:.81rem;line-height:1.65;max-width:88%;animation:slideIn .2s ease}
+.qa-msg.user{background:rgba(14,124,123,.18);border:1px solid rgba(14,124,123,.3);align-self:flex-end;color:var(--white)}
+.qa-msg.ai{background:rgba(10,22,40,.8);border:1px solid var(--border);align-self:flex-start;color:rgba(244,248,251,.9)}
+.qa-msg.thinking{opacity:.5;font-style:italic}
+.sq-btn{padding:4px 10px;border-radius:14px;border:1px solid var(--border);background:transparent;
+        color:var(--muted);font-size:.7rem;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s}
+.sq-btn:hover{border-color:var(--teal);color:var(--teal-l)}
+.audit-row{display:grid;grid-template-columns:72px 1fr 130px 80px 90px;gap:8px;
+           padding:10px 14px;border-bottom:1px solid var(--border);font-size:.75rem;align-items:center}
+.audit-row:last-child{border-bottom:none}
+.audit-hdr{background:rgba(14,124,123,.07);font-weight:600;color:var(--muted);font-size:.68rem;
+           letter-spacing:.07em;text-transform:uppercase}
+.audit-id{font-family:'DM Mono',monospace;color:var(--teal-l);font-size:.71rem}
+.risk-chip{padding:2px 7px;border-radius:4px;font-size:.68rem;font-weight:700;text-align:center;white-space:nowrap}
+.risk-High,.risk-Critical{background:rgba(231,76,60,.14);color:#e74c3c}
+.risk-Moderate{background:rgba(243,156,18,.12);color:#f39c12}
+.risk-Low{background:rgba(46,204,113,.12);color:#2ecc71}
+.risk-NA{background:rgba(139,165,191,.1);color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- HEADER -->
+<header>
+  <div class="hdr">
+    <div class="logo">
+      <div class="logo-icon">🩺</div>
+      <div><h1>Medi<span>Raksha</span></h1><p>AI Medical Intelligence</p></div>
+    </div>
+    <div class="badge"><div class="dot"></div><span id="badgeTxt">Gemini AI Ready</span></div>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-tag">✦ Free AI APIs · Runs on Your Computer</div>
+  <h2>Understand Any Medical Report with <em>AI Precision</em></h2>
+  <p>Choose a free AI provider, upload your report, and get an accurate structured summary with a downloadable PDF — all processed locally.</p>
+</section>
+
+<!-- STEPS -->
+<div class="steps">
+  <div class="step active" id="step1"><div class="snum">01</div><div class="slbl">Upload</div></div>
+  <div class="step" id="step2"><div class="snum">02</div><div class="slbl">AI Analysis</div></div>
+  <div class="step" id="step3"><div class="snum">03</div><div class="slbl">Translate</div></div>
+  <div class="step" id="step4"><div class="snum">04</div><div class="slbl">PDF Export</div></div>
+</div>
+
+<!-- MAIN CARD -->
+<div class="card">
+  <div class="card-hdr">
+    <div class="card-hdr-l">
+      <div class="card-ico">📄</div>
+      <div><div class="card-t">Medical Report Input</div>
+           <div class="card-s">Upload .txt / .pdf  or paste text directly</div></div>
+    </div>
+    <span class="tag-teal">Flask · Local Server</span>
+  </div>
+
+  <!-- INPUT -->
+  <div id="inputSec" class="card-body">
+    <div class="err" id="errBox"></div>
+
+    <!-- PROVIDER PANEL -->
+    <div class="api-panel">
+      <div class="panel-title">🔑 Step 1 — Choose AI Provider &amp; Enter Free API Key</div>
+
+      <div class="prov-grid">
+        <!-- Groq Only -->
+        <div class="prov-card sel" id="pc-groq" style="grid-column:1/-1;max-width:360px;margin:0 auto">
+          <div class="sel-dot"></div>
+          <div class="prov-top">
+            <div class="prov-ico q">⚡</div>
+            <div>
+              <div class="prov-name">Groq — Llama 3.3 70B</div>
+              <span class="prov-badge free">FREE</span>
+            </div>
+          </div>
+          <div class="prov-model">llama-3.3-70b-versatile</div>
+          <div class="prov-limit">30 req/min · Fast · No credit card needed</div>
+        </div>
+      </div>
+
+      <div class="key-row">
+        <input type="password" id="keyInp" class="key-inp"
+               placeholder="Paste your Groq API key here…" autocomplete="off"/>
+        <button class="icon-btn" onclick="toggleVis()" title="Show/hide key">👁</button>
+        <button class="save-btn" onclick="saveKey()">Save Key</button>
+      </div>
+      <div class="key-ok" id="keyOk">✅ Key saved for this session</div>
+      <div class="key-hint" id="keyHint">
+        Get your <b>free</b> Groq key at
+        <a href="https://console.groq.com/keys" target="_blank">console.groq.com/keys</a>
+        — takes 30 seconds, no credit card needed.
+      </div>
+    </div>
+
+    <!-- UPLOAD -->
+    <div class="sec-lbl" style="margin-bottom:10px">📂 Step 2 — Upload or Paste Report</div>
+    <div class="upload-zone" id="dropZone"
+      ondragover="ev.preventDefault();this.classList.add('drag')"
+      ondragleave="this.classList.remove('drag')"
+      ondrop="onDrop(event)"
+      onclick="document.getElementById('fileInput').click()">
+      <div class="upload-ico">📂</div>
+      <h3>Drop your report here (.txt or .pdf)</h3>
+      <p>or <span>browse files</span> from your computer</p>
+      <div id="fileChip" style="display:none">
+        <div class="file-chip">
+          <span>📄</span><span id="fileName">file.txt</span>
+          <button class="rm" onclick="rmFile(event)">✕</button>
+        </div>
+      </div>
+    </div>
+    <input type="file" id="fileInput" accept=".txt,.pdf" onchange="onFileSelect(event)"/>
+
+    <div class="divider">or paste text below</div>
+    <textarea id="reportTxt"
+      placeholder="Paste the full medical report here — patient info, diagnosis, lab results, clinical findings, doctor's notes, prescriptions, mental state examination…"
+      oninput="document.getElementById('charCount').textContent=this.value.length.toLocaleString()">
+    </textarea>
+    <div class="char-c"><span id="charCount">0</span> characters</div>
+
+    <!-- LANGUAGE -->
+    <div class="lang-sec">
+      <div class="sec-lbl">🌐 Step 3 — Select Output Language</div>
+      <div class="lang-grid">
+        <button class="lang-btn sel" onclick="pickLang(this,'en','English')">🇮🇳 English</button>
+        <button class="lang-btn" onclick="pickLang(this,'hi','Hindi')">हिं Hindi</button>
+        <button class="lang-btn" onclick="pickLang(this,'mr','Marathi')">म Marathi</button>
+        <button class="lang-btn" onclick="pickLang(this,'bn','Bengali')">বাং Bengali</button>
+        <button class="lang-btn" onclick="pickLang(this,'ta','Tamil')">த Tamil</button>
+        <button class="lang-btn" onclick="pickLang(this,'te','Telugu')">తె Telugu</button>
+        <button class="lang-btn" onclick="pickLang(this,'kn','Kannada')">ಕ Kannada</button>
+        <button class="lang-btn" onclick="pickLang(this,'gu','Gujarati')">ગુ Gujarati</button>
+        <button class="lang-btn" onclick="pickLang(this,'pa','Punjabi')">ਪੰ Punjabi</button>
+        <button class="lang-btn" onclick="pickLang(this,'ml','Malayalam')">മ Malayalam</button>
+      </div>
+    </div>
+
+    <div class="submit-row">
+      <button class="btn-s" onclick="clearAll()">🗑 Clear</button>
+      <button class="btn-p" onclick="runAnalysis()">⚡ Analyze &amp; Summarize</button>
+    </div>
+  </div>
+
+  <!-- LOADING -->
+  <div class="loading" id="loadSec">
+    <div class="spin">
+      <svg width="54" height="54" viewBox="0 0 54 54" fill="none">
+        <circle cx="27" cy="27" r="23" stroke="rgba(14,124,123,.2)" stroke-width="3"/>
+        <path d="M27 4 A23 23 0 0 1 50 27" stroke="url(#g1)" stroke-width="3" stroke-linecap="round"/>
+        <defs><linearGradient id="g1" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="#0e7c7b"/><stop offset="100%" stop-color="#14a8a7"/>
+        </linearGradient></defs>
+      </svg>
+    </div>
+    <div class="load-t">Analyzing Medical Report…</div>
+    <div class="load-s" id="loadMsg">Connecting to AI…</div>
+    <div class="prog-wrap"><div class="prog-fill" id="progFill"></div></div>
+    <div class="prog-steps">
+      <div class="ps act" id="ps1"><div class="ps-ico">→</div> Extracting text from document</div>
+      <div class="ps"     id="ps2"><div class="ps-ico">→</div> <span id="aiStep">AI: parsing clinical data</span></div>
+      <div class="ps"     id="ps3"><div class="ps-ico">→</div> Generating structured summary</div>
+      <div class="ps"     id="ps4"><div class="ps-ico">→</div> Translating all fields to <span id="transLangLabel">selected language</span></div>
+      <div class="ps"     id="ps5"><div class="ps-ico">→</div> Building PDF document</div>
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div class="results" id="resSec">
+    <div class="card-hdr">
+      <div class="card-hdr-l">
+        <div class="card-ico">✅</div>
+        <div><div class="card-t">Analysis Complete</div>
+             <div class="card-s" id="resMeta">Report processed</div></div>
+      </div>
+      <button class="btn-s" style="font-size:.74rem;padding:7px 12px" onclick="resetApp()">← New Report</button>
+    </div>
+    <div class="card-body">
+      <div class="sec-lbl" style="margin-bottom:11px">📊 Key Extracted Information</div>
+      <div class="hl-grid" id="hlRow"></div>
+
+      <div class="r-grid">
+        <div class="r-card">
+          <div class="r-card-h">
+            <span>🤖</span>
+            <h4>AI-Generated Summary</h4>
+            <button id="ttsBtn" onclick="toggleSpeak()" title="Listen to summary" style="
+              margin-left:auto; display:flex; align-items:center; gap:5px;
+              background:rgba(14,124,123,0.12); border:1px solid var(--border);
+              border-radius:7px; color:var(--teal-l); cursor:pointer;
+              padding:5px 11px; font-size:.75rem; font-weight:600;
+              font-family:'DM Sans',sans-serif; transition:all .2s;
+              flex-shrink:0;">
+              🔊 <span id="ttsBtnTxt">Listen</span>
+            </button>
+          </div>
+          <div class="r-card-b" id="summaryTxt"></div>
+        </div>
+        <div class="r-card">
+          <div class="r-card-h"><span>🌐</span><h4 id="transTitle">Translated Summary</h4></div>
+          <div class="r-card-b" id="transTxt"></div>
+        </div>
+
+        <!-- Q&A CHATBOT -->
+        <div class="r-card" style="grid-column:1/-1">
+          <div class="r-card-h"><span>💬</span><h4>Ask AI About This Report</h4></div>
+          <div class="r-card-b" style="padding:0">
+            <div id="qaMsgs" style="max-height:220px;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:8px">
+              <div class="qa-msg ai">👋 Report analyzed! Ask me anything about this report — diagnosis, medications, findings, or what any term means.</div>
+            </div>
+            <div style="display:flex;gap:8px;padding:10px 14px;border-top:1px solid var(--border)">
+              <input type="text" id="qaInp" placeholder="e.g. What is the diagnosis? Is creatinine dangerous?"
+                style="flex:1;background:rgba(10,22,40,.7);border:1px solid var(--border);border-radius:8px;
+                       color:var(--white);font-size:.82rem;padding:9px 12px;outline:none;font-family:'DM Sans',sans-serif"
+                onkeydown="if(event.key==='Enter')sendQuestion()"/>
+              <button onclick="sendQuestion()" id="qaBtn"
+                style="background:var(--teal);border:none;border-radius:8px;color:#fff;
+                       cursor:pointer;padding:9px 16px;font-size:.82rem;font-weight:600;
+                       font-family:'DM Sans',sans-serif">Ask →</button>
+            </div>
+            <!-- Suggested questions -->
+            <div style="padding:8px 14px;display:flex;flex-wrap:wrap;gap:6px;border-top:1px solid var(--border)">
+              <span style="font-size:.7rem;color:var(--muted);align-self:center">Quick:</span>
+              <button class="sq-btn" onclick="askQ('What is the main diagnosis?')">Main diagnosis?</button>
+              <button class="sq-btn" onclick="askQ('What do the lab results show?')">Lab results?</button>
+              <button class="sq-btn" onclick="askQ('What medications are prescribed?')">Medications?</button>
+              <button class="sq-btn" onclick="askQ('What is the prognosis?')">Prognosis?</button>
+              <button class="sq-btn" onclick="askQ('Is this report serious or routine?')">Serious or routine?</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sec-lbl" style="margin-bottom:9px">📄 PDF Preview</div>
+      <div class="pdf-prev">
+        <div class="pdf-tb">
+          <div class="pdf-tb-l"><span>📄</span><span id="pdfName">MediRaksha_Report.pdf</span></div>
+          <span style="font-size:.69rem;color:var(--muted)">AI-Generated Document</span>
+        </div>
+        <div class="pdf-body" id="pdfPrev"></div>
+      </div>
+
+      <div class="dl-row">
+        <button class="btn-dl" onclick="downloadPDF()">⬇️ Download PDF Report</button>
+        <button class="btn-s" onclick="copySum()">📋 Copy Summary</button>
+        <button class="btn-s" onclick="resetApp()">🔄 New Report</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- AUDIT LOG SECTION -->
+<div class="wrap" style="margin-top:32px">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+    <div>
+      <div class="sec-lbl" style="margin-bottom:3px">📋 Audit Log</div>
+      <p style="font-size:.75rem;color:var(--muted)">Record of all reports analyzed in this session</p>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn-s" style="font-size:.72rem" onclick="loadAudit()">🔄 Refresh</button>
+      <button class="btn-s" style="font-size:.72rem;border-color:var(--error);color:var(--error)"
+              onclick="clearAudit()">🗑 Clear</button>
+    </div>
+  </div>
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden">
+    <div class="audit-row audit-hdr">
+      <span>Report ID</span><span>Patient · Type</span>
+      <span>Diagnoses</span><span>Risk</span><span>Time</span>
+    </div>
+    <div id="auditBody">
+      <div style="text-align:center;padding:28px;color:var(--muted);font-size:.82rem">
+        No reports analyzed yet. Analyze a report to see it logged here.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FEATURE CARDS -->
+<div class="features">
+  <div class="feat"><div class="feat-ico">🖥️</div>
+    <h4>Runs Fully Locally</h4>
+    <p>Flask serves everything on localhost:5000. No CORS issues — API calls go through Python.</p>
+  </div>
+  <div class="feat"><div class="feat-ico">🆓</div>
+    <h4>Free AI — Groq</h4>
+    <p>Groq gives 30 req/min with Llama 3.3 70B. Completely free, no credit card needed.</p>
+  </div>
+  <div class="feat"><div class="feat-ico">📋</div>
+    <h4>Audit Log</h4>
+    <p>Every report analyzed is logged with patient, type, diagnosis, risk and timestamp for compliance.</p>
+  </div>
+</div>
+
+<footer>
+  <p>© 2025 <span>MediRaksha</span> — AI Medical Report Summarization</p>
+  <p style="font-size:.7rem">Flask · Groq · Llama 3.3 · ReportLab · 9 Indian Languages</p>
+</footer>
+</div>
+
+<div class="toast" id="toast">
+  <span id="toastIco">✅</span><span id="toastMsg">Done!</span>
+</div>
+
+<script>
+// ─── STATE ───────────────────────────────
+const provider = 'groq';   // Groq only — fixed
+let langCode   = 'en';
+let langName   = 'English';
+let resultData = null;
+let resultLang = 'English';
+
+// ─── API KEY (Groq only) ─────────────────
+function saveKey() {
+  const k = document.getElementById('keyInp').value.trim();
+  if (!k) { toast('⚠️','Paste your Groq API key first'); return; }
+  sessionStorage.setItem('groq_key', k);
+  document.getElementById('keyOk').classList.add('show');
+  toast('✅','Groq key saved for this session!');
+}
+function toggleVis() {
+  const i = document.getElementById('keyInp');
+  i.type = i.type === 'password' ? 'text' : 'password';
+}
+function getKey() {
+  return document.getElementById('keyInp').value.trim() ||
+         sessionStorage.getItem('groq_key') || '';
+}
+// Restore saved key on page load
+window.addEventListener('DOMContentLoaded', () => {
+  const saved = sessionStorage.getItem('groq_key') || '';
+  if (saved) {
+    document.getElementById('keyInp').value = saved;
+    document.getElementById('keyOk').classList.add('show');
+  }
+  loadAudit();
+});
+
+// ─── LANGUAGE ────────────────────────────
+function pickLang(btn, code, name) {
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('sel'));
+  btn.classList.add('sel');
+  langCode = code; langName = name;
+}
+
+// ─── FILE HANDLING ───────────────────────
+function onFileSelect(e) { if (e.target.files[0]) loadFile(e.target.files[0]); }
+function onDrop(e) {
+  e.preventDefault();
+  document.getElementById('dropZone').classList.remove('drag');
+  if (e.dataTransfer.files[0]) loadFile(e.dataTransfer.files[0]);
+}
+function loadFile(f) {
+  document.getElementById('fileName').textContent = f.name;
+  document.getElementById('fileChip').style.display = 'block';
+  toast('📄', 'File selected: ' + f.name);
+  showErr('');
+}
+function rmFile(e) {
+  e.stopPropagation();
+  document.getElementById('fileChip').style.display = 'none';
+  document.getElementById('fileInput').value = '';
+}
+function clearAll() {
+  document.getElementById('reportTxt').value = '';
+  document.getElementById('charCount').textContent = '0';
+  document.getElementById('fileChip').style.display = 'none';
+  document.getElementById('fileInput').value = '';
+  showErr('');
+  toast('🗑','Cleared');
+}
+
+// ─── STEP BAR ────────────────────────────
+function setStep(n) {
+  for (let i=1;i<=4;i++) {
+    const el = document.getElementById('step'+i);
+    el.classList.remove('active','done');
+    if (i < n) el.classList.add('done');
+    else if (i === n) el.classList.add('active');
+  }
+}
+function doneSteps() {
+  for (let i=1;i<=4;i++) {
+    document.getElementById('step'+i).classList.remove('active');
+    document.getElementById('step'+i).classList.add('done');
+  }
+}
+
+// ─── PROGRESS ────────────────────────────
+function setProg(step, pct, msg) {
+  for (let i=1; i<step; i++) {
+    const el = document.getElementById('ps'+i);
+    if (el) { el.classList.remove('act'); el.classList.add('done'); el.querySelector('.ps-ico').textContent='✓'; }
+  }
+  const cur = document.getElementById('ps'+step);
+  if (cur) cur.classList.add('act');
+  document.getElementById('progFill').style.width = pct + '%';
+  document.getElementById('loadMsg').textContent = msg;
+}
+
+// ─── ERRORS ──────────────────────────────
+function showErr(msg) {
+  const el = document.getElementById('errBox');
+  if (msg) { el.textContent = '⚠️  ' + msg; el.classList.add('show'); }
+  else el.classList.remove('show');
+}
+
+// ─── MAIN ANALYSIS ───────────────────────
+async function runAnalysis() {
+  const txt  = document.getElementById('reportTxt').value.trim();
+  const file = document.getElementById('fileInput').files[0];
+  const key  = getKey();
+
+  if (!key)         { showErr('Please enter and save your Groq API key first (Step 1).'); return; }
+  if (!txt && !file){ showErr('Please upload a file or paste report text (Step 2).'); return; }
+
+  showErr('');
+  document.getElementById('inputSec').style.display = 'none';
+  document.getElementById('loadSec').classList.add('show');
+  document.getElementById('aiStep').textContent = 'Groq (Llama 3.3): parsing clinical data';
+  document.getElementById('transLangLabel').textContent = langName;
+  setStep(2);
+  resultData = null;
+  resetQA();
+
+  try {
+    setProg(1, 15, 'Reading document…'); await sleep(300);
+    setProg(2, 32, 'Groq analyzing report…'); setStep(2);
+
+    const fd = new FormData();
+    fd.append('provider',  'groq');
+    fd.append('api_key',   key);
+    fd.append('lang_code', langCode);
+    fd.append('lang_name', langName);
+    if (file) fd.append('file', file);
+    else      fd.append('report_text', txt);
+
+    const ticker = animBar(32, 68);
+    const resp   = await fetch('/analyze', { method:'POST', body: fd });
+    clearInterval(ticker);
+
+    const json = await resp.json();
+    if (!json.success) throw new Error(json.error || 'Analysis failed');
+
+    resultData = json.data;
+    resultLang = json.lang_name;
+
+    setProg(3, 72, 'Summary generated…'); setStep(3); await sleep(280);
+    setProg(4, 86, langCode==='en' ? 'English output ready…' : `Translated to ${langName}…`); await sleep(280);
+    setProg(5, 100,'Building PDF…'); setStep(4); await sleep(400);
+
+    doneSteps();
+    showResults(resultData, resultLang);
+    loadAudit();   // refresh audit log after each analysis
+    toast('✅', 'Done! Report #' + (json.report_id||'') + ' analyzed.');
+
+  } catch(err) {
+    document.getElementById('loadSec').classList.remove('show');
+    document.getElementById('inputSec').style.display = 'block';
+    setStep(1);
+    showErr(err.message);
+    console.error(err);
+  }
+}
+
+function animBar(from, to) {
+  let p = from;
+  return setInterval(() => {
+    if (p < to) { p += 0.5; document.getElementById('progFill').style.width = p + '%'; }
+  }, 400);
+}
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// ─── SHOW RESULTS ────────────────────────
+function showResults(data, lname) {
+  document.getElementById('loadSec').classList.remove('show');
+  document.getElementById('resSec').classList.add('show');
+
+  const kh = data.key_highlights || {};
+  const pi = data.patient_info   || {};
+  const di = data.doctor_info    || {};
+  const dx = (data.diagnoses||[]).join(', ') || 'See report';
+  const diagHighlight = dx !== 'See report' ? dx : (kh.primary_diagnosis || 'See report');
+
+  document.getElementById('resMeta').textContent =
+    `Analyzed · ${new Date().toLocaleString()} · ${lname}`;
+
+  const hls = [
+    { ico:'🔬', lbl:'Diagnosis',    val: diagHighlight },
+    { ico:'⚠️', lbl:'Risk Level',   val: kh.risk_level || 'N/A' },
+    { ico:'🧠', lbl:'Capacity',     val: kh.capacity_status || 'Not Assessed' },
+    { ico:'👤', lbl:'Patient',      val: pi.name || 'See report' },
+    { ico:'📅', lbl:'Follow-up',    val: kh.follow_up || 'N/A' },
+    { ico:'🔢', lbl: kh.metric1_label||'Key Finding', val: kh.metric1_value||'—' },
+    { ico:'📊', lbl: kh.metric2_label||'Finding 2',   val: kh.metric2_value||'—' },
+    { ico:'🏥', lbl:'Examined By',  val: di.name || 'See report' },
+  ];
+  document.getElementById('hlRow').innerHTML = hls.map(h =>
+    `<div class="hl"><div class="hl-ico">${h.ico}</div>
+     <div class="hl-t"><h5>${h.lbl}</h5><p>${h.val}</p></div></div>`
+  ).join('');
+
+  // ── Clean and display plain summary ──
+  const rawSummary = data.plain_summary || 'See full analysis.';
+  const cleanSummary = cleanText(rawSummary);
+  document.getElementById('summaryTxt').textContent = cleanSummary;
+
+  // ── Translation tab ──
+  if (langCode === 'en') {
+    document.getElementById('transTitle').textContent = 'English Summary';
+    document.getElementById('transTxt').textContent = 'English was selected — no translation needed.';
+  } else {
+    document.getElementById('transTitle').textContent = `${lname} Translation`;
+    const parts = [];
+    const tfields = [
+      { key: 'translated_summary',            label: '📋 Summary' },
+      { key: 'translated_medical_history',    label: '🏥 Medical History' },
+      { key: 'translated_clinical_findings',  label: '🔍 Clinical Findings' },
+      { key: 'translated_assessment_opinion', label: '📊 Assessment' },
+      { key: 'translated_prognosis',          label: '⏳ Prognosis' },
+      { key: 'translated_recommendations',    label: '📅 Recommendations' },
+    ];
+    tfields.forEach(f => {
+      const v = data[f.key];
+      if (v && v.trim() && !v.startsWith('[Translation failed')) {
+        parts.push(`${f.label}:\n${cleanText(v)}`);
+      }
+    });
+    document.getElementById('transTxt').textContent = parts.length
+      ? parts.join('\n\n')
+      : (data.translated_summary?.startsWith('[Translation failed')
+          ? '⚠️ Translation failed. Check your API key and try again.'
+          : data.translated_summary || 'Translation not available. Try again.');
+  }
+
+  // ── PDF preview — clean structured format ──
+  const date = new Date().toLocaleDateString('en-IN',{year:'numeric',month:'long',day:'numeric'});
+  const meds = (data.medications||[]).filter(m=>m&&m!=='N/A').slice(0,3).join(' · ')||'Not documented';
+  const cfClean  = formatFindings(data.clinical_findings);
+  const histClean = cleanText(data.medical_history || '');
+  const assessClean = cleanText(data.assessment_opinion || '');
+
+  document.getElementById('pdfPrev').innerHTML = `
+    <h3>MediRaksha — Patient Summary Report</h3>
+    <div class="pdf-meta">Generated: ${date} | Language: ${lname} | Provider: Groq (Llama 3.3)</div>
+    <div class="pdf-sec"><h4>👤 Patient</h4><p>${pi.name||'N/A'}${pi.age_gender ? ' · ' + pi.age_gender : ''}</p></div>
+    <div class="pdf-sec"><h4>🔬 Confirmed Diagnosis</h4><p>${dx}</p></div>
+    ${histClean ? `<div class="pdf-sec"><h4>📋 Medical History</h4><p>${histClean.substring(0,220)}${histClean.length>220?'…':''}</p></div>` : ''}
+    ${cfClean   ? `<div class="pdf-sec"><h4>🔍 Clinical Findings</h4>${cfClean}</div>` : ''}
+    ${meds !== 'Not documented' ? `<div class="pdf-sec"><h4>💊 Medications</h4><p>${meds}</p></div>` : ''}
+    ${assessClean ? `<div class="pdf-sec"><h4>📊 Assessment</h4><p>${assessClean.substring(0,200)}${assessClean.length>200?'…':''}</p></div>` : ''}
+    ${data.prognosis ? `<div class="pdf-sec"><h4>⏳ Prognosis</h4><p>${cleanText(data.prognosis).substring(0,160)}…</p></div>` : ''}
+    <div class="pdf-sec"><h4>🤖 Summary</h4><p>${cleanSummary}</p></div>`;
+
+  const fn = `MediRaksha_${(pi.name||'Report').replace(/\s+/g,'_')}_${date.replace(/[,\s]+/g,'_')}.pdf`;
+  document.getElementById('pdfName').textContent = fn;
+}
+
+// ─── TEXT CLEANING HELPERS ────────────────
+function cleanText(text) {
+  if (!text) return '';
+  let t = String(text).trim();
+  // Remove raw Python dict/JSON artifacts
+  t = t.replace(/\{[^}]{0,200}\}/g, '');
+  t = t.replace(/\[[^\]]{0,200}\]/g, '');
+  t = t.replace(/'[^']*'\s*:/g, '');
+  // Remove double spaces and leading punctuation
+  t = t.replace(/\s{2,}/g, ' ').trim();
+  t = t.replace(/^[,;:\s]+/, '').trim();
+  // Ensure ends with a period if it's a sentence
+  if (t.length > 20 && !/[.!?]$/.test(t)) t += '.';
+  return t;
+}
+
+function formatFindings(text) {
+  if (!text) return '';
+  const clean = cleanText(text);
+  if (!clean) return '';
+  // If text has bullet points or newlines, render as structured list
+  if (clean.includes('\n') || clean.includes('•')) {
+    const lines = clean.split('\n').filter(l => l.trim());
+    const items = lines.map(l => {
+      const stripped = l.replace(/^[•\-\*]\s*/, '').trim();
+      if (!stripped) return '';
+      // Section headers (e.g. "Lab Observations:")
+      if (stripped.endsWith(':') || /^[A-Z][a-z]+ [A-Z]/.test(stripped)) {
+        return `<b style="color:var(--gold-l);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase">${stripped}</b>`;
+      }
+      return `• ${stripped}`;
+    }).filter(Boolean);
+    return `<p style="line-height:1.9">${items.join('<br>')}</p>`;
+  }
+  // Plain paragraph
+  return `<p>${clean.substring(0,300)}${clean.length>300?'…':''}</p>`;
+}
+
+// ─── PDF DOWNLOAD (via Flask) ─────────────
+async function downloadPDF() {
+  if (!resultData) { toast('⚠️','No data yet.'); return; }
+  toast('⏳','Generating PDF…');
+  try {
+    const resp = await fetch('/download_pdf', {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json' },
+      body: JSON.stringify({ summary_data: resultData, lang_name: resultLang })
+    });
+    if (!resp.ok) throw new Error('PDF generation failed on server.');
+    const blob = await resp.blob();
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url;
+    a.download = document.getElementById('pdfName').textContent;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast('⬇️','PDF downloaded!');
+  } catch(e) {
+    toast('⚠️', e.message);
+  }
+}
+
+function copySum() {
+  navigator.clipboard.writeText(document.getElementById('summaryTxt').textContent)
+    .then(() => toast('📋','Copied!'));
+}
+
+// ─── RESET ───────────────────────────────
+function resetApp() {
+  document.getElementById('inputSec').style.display = 'block';
+  document.getElementById('loadSec').classList.remove('show');
+  document.getElementById('resSec').classList.remove('show');
+  for (let i=1;i<=5;i++){
+    const el=document.getElementById('ps'+i);
+    if(el){el.classList.remove('act','done');el.querySelector('.ps-ico').textContent='→';}
+  }
+  document.getElementById('progFill').style.width = '0%';
+  setStep(1); clearAll(); resultData = null;
+  stopSpeech();
+}
+
+// ─── Q&A CHATBOT ─────────────────────────
+function resetQA() {
+  document.getElementById('qaMsgs').innerHTML =
+    '<div class="qa-msg ai">👋 Report analyzed! Ask me anything about this report — diagnosis, medications, findings, or what any term means.</div>';
+  document.getElementById('qaInp').value = '';
+}
+
+function askQ(q) {
+  document.getElementById('qaInp').value = q;
+  sendQuestion();
+}
+
+async function sendQuestion() {
+  const inp = document.getElementById('qaInp');
+  const q   = inp.value.trim();
+  if (!q) return;
+  const key = getKey();
+  if (!key) { toast('⚠️','Enter your Groq API key first'); return; }
+
+  inp.value = '';
+  const box = document.getElementById('qaMsgs');
+  box.innerHTML += `<div class="qa-msg user">${q}</div>`;
+  box.innerHTML += `<div class="qa-msg ai thinking" id="qaThink">⏳ Thinking…</div>`;
+  box.scrollTop = box.scrollHeight;
+  document.getElementById('qaBtn').disabled = true;
+
+  try {
+    const r = await fetch('/ask', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question: q, api_key: key })
+    });
+    const data = await r.json();
+    document.getElementById('qaThink').remove();
+    const ans = data.success ? data.answer : '⚠️ ' + data.error;
+    box.innerHTML += `<div class="qa-msg ai">${ans}</div>`;
+  } catch(e) {
+    document.getElementById('qaThink')?.remove();
+    box.innerHTML += `<div class="qa-msg ai">⚠️ Could not get answer. Please try again.</div>`;
+  }
+  document.getElementById('qaBtn').disabled = false;
+  box.scrollTop = box.scrollHeight;
+}
+
+// ─── AUDIT LOG ───────────────────────────
+async function loadAudit() {
+  try {
+    const r    = await fetch('/audit');
+    const data = await r.json();
+    const log  = data.log || [];
+    const body = document.getElementById('auditBody');
+
+    if (!log.length) {
+      body.innerHTML = '<div style="text-align:center;padding:28px;color:var(--muted);font-size:.82rem">No reports analyzed yet. Analyze a report to see it logged here.</div>';
+      return;
+    }
+
+    body.innerHTML = log.map(e => {
+      const dx   = (e.diagnoses || []).join(', ') || 'None identified';
+      const risk = e.risk_level || 'N/A';
+      const rkey = risk.replace(/\s/g,'');
+      const time = e.timestamp ? e.timestamp.slice(11,16) : '—';
+      const date = e.timestamp ? e.timestamp.slice(5,10)  : '—';
+      return `<div class="audit-row">
+        <span class="audit-id">${e.id || '—'}</span>
+        <span><b style="font-size:.78rem">${e.patient||'Unknown'}</b>
+              <span style="color:var(--muted);font-size:.7rem;display:block">${e.report_type||'General'} · ${e.language||'English'}</span></span>
+        <span style="color:var(--white);font-size:.74rem">${dx.length>40?dx.slice(0,40)+'…':dx}</span>
+        <span><span class="risk-chip risk-${rkey}">${risk}</span></span>
+        <span style="color:var(--muted)">${date}<br><span style="font-size:.68rem">${time}</span></span>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    console.error('Audit load error:', e);
+  }
+}
+
+async function clearAudit() {
+  if (!confirm('Clear all audit log entries?')) return;
+  await fetch('/audit/clear', { method:'POST' });
+  loadAudit();
+  toast('🗑','Audit log cleared');
+}
+
+// ─── TOAST ───────────────────────────────
+let toastTmr;
+function toast(ico, msg) {
+  document.getElementById('toastIco').textContent = ico;
+  document.getElementById('toastMsg').textContent = msg;
+  const t = document.getElementById('toast');
+  t.classList.add('show');
+  clearTimeout(toastTmr);
+  toastTmr = setTimeout(() => t.classList.remove('show'), 3400);
+}
+
+// ─── TEXT TO SPEECH ──────────────────────
+let ttsActive = false;
+function toggleSpeak() {
+  const btn    = document.getElementById('ttsBtn');
+  const btnTxt = document.getElementById('ttsBtnTxt');
+  const text   = document.getElementById('summaryTxt').textContent;
+  if (!text || text.trim() === '') { toast('⚠️', 'No summary to read yet.'); return; }
+  if (ttsActive) {
+    window.speechSynthesis.cancel(); ttsActive = false;
+    btn.style.background = 'rgba(14,124,123,0.12)';
+    btn.style.color = 'var(--teal-l)'; btnTxt.textContent = 'Listen'; return;
+  }
+  const u = new SpeechSynthesisUtterance(text);
+  u.rate = 0.92; u.pitch = 1.0; u.lang = 'en-IN';
+  u.onstart = () => { ttsActive=true; btn.style.background='rgba(14,124,123,0.3)'; btn.style.color='#fff'; btnTxt.textContent='Stop'; };
+  u.onend   = () => { ttsActive=false; btn.style.background='rgba(14,124,123,0.12)'; btn.style.color='var(--teal-l)'; btnTxt.textContent='Listen'; };
+  u.onerror = () => { ttsActive=false; btnTxt.textContent='Listen'; };
+  window.speechSynthesis.cancel();
+  window.speechSynthesis.speak(u);
+}
+function stopSpeech() {
+  if (ttsActive) { window.speechSynthesis.cancel(); ttsActive=false; }
+  const t = document.getElementById('ttsBtnTxt');
+  if (t) t.textContent = 'Listen';
+}
+</script>
+</body>
+</html>
