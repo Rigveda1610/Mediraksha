@@ -59,10 +59,24 @@ FOLDER STRUCTURE
 
 mediraksha/
 ├── app.py               ← Run this file
+├── config.py            ← Environment config
 ├── requirements.txt     ← Python dependencies
 ├── README.txt           ← This file
-└── templates/
-    └── index.html       ← Web UI (auto-served)
+├── .env.example         ← Example environment values
+├── modules/             ← Backend modules
+│   ├── audit.py         ← SQLite audit log persistence
+│   ├── detection.py     ← Report type detection
+│   ├── extraction.py    ← PDF text extraction
+│   ├── pdf_generator.py ← PDF export generation
+│   ├── prompts.py       ← AI prompt templates
+│   ├── providers.py     ← Groq API calls
+│   ├── routes.py        ← Flask routes
+│   ├── sanitizer.py     ← JSON parsing + sanitization
+│   ├── translation.py   ← Translation helpers
+│   └── validation.py    ← Lab validation + post-processing
+├── templates/
+│   └── index.html       ← Web UI (auto-served)
+└── data/                ← SQLite DB created at runtime
 
 
 ═══════════════════════════════════════════════════
