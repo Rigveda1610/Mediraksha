@@ -1,4 +1,4 @@
-#  MediRaksha — AI Medical Report Summarizer
+  MediRaksha — AI Medical Report Summarizer
 
 MediRaksha is an AI-powered system that analyzes and summarizes medical reports into structured, easy-to-understand insights. It helps doctors quickly interpret reports and enables patients to understand their health in simple language.
 
