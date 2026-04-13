@@ -12,7 +12,7 @@ from modules.detection import detect_report_type
 from modules.extraction import extract_pdf_text
 from modules.pdf_generator import generate_pdf
 from modules.prompts import build_prompt
-from modules.providers import call_groq, groq_chat
+from modules.providers import call_ai, chat_ai
 from modules.sanitizer import sanitize_result
 from modules.translation import translate_all_fields
 from modules.validation import post_process_result
@@ -31,12 +31,20 @@ def register_routes(app):
             api_key = (request.form.get("api_key", "") or "").strip()
             lang_code = (request.form.get("lang_code", "en") or "en").strip()
             lang_name = (request.form.get("lang_name", "English") or "English").strip()
-            provider = "groq"
+            provider = (request.form.get("provider", "") or "groq").strip().lower()
+            if provider not in ("groq", "openai"):
+                provider = "groq"
 
             if not api_key:
-                logger.warning("Analyze request missing Groq API key")
+                logger.warning("Analyze request missing %s API key", provider)
+                provider_label = "OpenAI" if provider == "openai" else "Groq"
+                provider_hint = (
+                    "platform.openai.com/api-keys"
+                    if provider == "openai"
+                    else "console.groq.com/keys"
+                )
                 return jsonify({"success": False,
-                                "error": "Groq API key is missing. Get a free key at console.groq.com/keys"}), 400
+                                "error": f"{provider_label} API key is missing. Get a key at {provider_hint}"}), 400
 
             report_text = ""
             filename_used = "Text input"
@@ -67,7 +75,7 @@ def register_routes(app):
 
             detected_type = detect_report_type(report_text)
             prompt = build_prompt(detected_type)
-            result = call_groq(api_key, report_text, prompt)
+            result = call_ai(provider, api_key, report_text, prompt)
 
             result["report_type"] = detected_type
             result = sanitize_result(result)
@@ -101,6 +109,7 @@ def register_routes(app):
 
             session["last_report"] = report_text[:app.config["MAX_REPORT_LENGTH"]]
             session["last_api_key"] = api_key
+            session["last_provider"] = provider
             session.modified = True
 
             logger.info("Completed analysis %s as %s", report_id, detected_type)
@@ -133,6 +142,7 @@ def register_routes(app):
             question = (body.get("question") or "").strip()
             api_key = (body.get("api_key") or session.get("last_api_key") or "").strip()
             context = session.get("last_report", "")
+            provider = session.get("last_provider", "groq")
 
             if not question:
                 logger.warning("Ask request missing question")
@@ -153,7 +163,7 @@ def register_routes(app):
             )
             user_msg = f"MEDICAL REPORT:\n{context}\n\nQUESTION: {question}\n\nANSWER:"
 
-            answer = groq_chat(api_key, system_msg, user_msg, max_tokens=500)
+            answer = chat_ai(provider, api_key, system_msg, user_msg, max_tokens=500)
             logger.info("Answered follow-up question for current session")
             return jsonify({"success": True, "answer": answer})
 
