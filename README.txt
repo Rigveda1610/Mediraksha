@@ -1,10 +1,9 @@
-  MediRaksha — AI Medical Report Summarizer
+ MediRaksha — AI Medical Report Summarizer
 
 MediRaksha is an AI-powered system that analyzes and summarizes medical reports into structured, easy-to-understand insights. It helps doctors quickly interpret reports and enables patients to understand their health in simple language.
 
 
-
-##  Features
+ Features
 
 *  Upload medical reports (PDF)
 *  Automatic report type detection (Lab, Prescription, Discharge Summary, etc.)
@@ -26,8 +25,7 @@ MediRaksha is an AI-powered system that analyzes and summarizes medical reports 
 *  Persistent audit logging using SQLite
 
 
-
-##  How It Works
+ How It Works
 
 1. User uploads a medical report (PDF)
 2. System detects report type automatically
@@ -39,8 +37,7 @@ MediRaksha is an AI-powered system that analyzes and summarizes medical reports 
 8. User can interact using chatbot or download PDF
 
 
-
-##  Project Structure
+ Project Structure
 
 
 Mediraksha/
@@ -63,72 +60,52 @@ Mediraksha/
 ├── data/                  # SQLite database (audit logs)
 ├── requirements.txt
 └── README.md
-```
 
 
-##  Setup & Installation
 
-### 1. Clone the repository
+Setup & Installation
 
-```
+ 1. Clone the repository
+
+
 git clone https://github.com/Rigveda1610/Mediraksha.git
 cd Mediraksha
-```
 
----
+2. Create virtual environment (recommended)
 
-### 2. Create virtual environment (recommended)
 
-```
 python -m venv venv
-```
 
 Activate:
 
 Windows:
-
-```
 venv\Scripts\activate
-```
 
----
-
-### 3. Install dependencies
-
-```
+3. Install dependencies
 pip install -r requirements.txt
-```
 
----
 
-### 4. Configure environment variables
+4. Configure environment variables
 
 Create a `.env` file:
 
-```
 GROQ_API_KEY=your_groq_api_key
 SECRET_KEY=your_secret_key
-```
 
----
+5. Run the application
 
-### 5. Run the application
-
-```
 python app.py
-```
 
----
 
-### 6. Open in browser
 
-```
+6. Open in browser
+
+
 http://localhost:5000
-```
 
----
 
-##  API Endpoints
+
+API Endpoints
 
 * `/analyze` → Analyze medical report
 * `/ask` → Chatbot Q&A
@@ -138,7 +115,7 @@ http://localhost:5000
 
 
 
-##  Tech Stack
+Tech Stack
 
 * Python (Flask)
 * Groq API (LLM)
@@ -146,9 +123,9 @@ http://localhost:5000
 * HTML/CSS (Frontend)
 * PDF Processing Libraries
 
----
 
-##  Key Highlights
+
+Key Highlights
 
 * Modular backend architecture (production-ready)
 * SQLite-based persistent audit logging
@@ -156,21 +133,15 @@ http://localhost:5000
 * Multi-language patient-friendly summaries
 * AI + deterministic validation hybrid system
 
----
 
-##  Future Improvements
+
+Future Improvements
 
 * OpenAI integration (multi-provider AI support)
 * Doctor dashboard with patient history
 * Graph-based trend analysis
 * EMR/Hospital system integration
 * Enhanced security & authentication
-
----
-
-##  Author
-
-**Rigveda Mhatre**
 
 ---
 
