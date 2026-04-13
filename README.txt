@@ -1,96 +1,179 @@
-╔══════════════════════════════════════════════════╗
-║   MediRaksha — AI Medical Report Summarizer      ║
-╚══════════════════════════════════════════════════╝
+#  MediRaksha — AI Medical Report Summarizer
 
-WHY THE OLD FILE DIDN'T WORK
-──────────────────────────────
-Opening an HTML file directly (file://) causes
-"Failed to fetch" because browsers block all
-external API calls from local files (CORS policy).
-
-This version fixes it — Flask handles all API
-calls on the server side, so the browser only
-talks to localhost.
-
-═══════════════════════════════════════════════════
-HOW TO RUN  (3 simple steps)
-═══════════════════════════════════════════════════
-
-STEP 1 — Install Python packages
-──────────────────────────────────
-Open Terminal / Command Prompt in this folder:
-
-    pip install -r requirements.txt
+MediRaksha is an AI-powered system that analyzes and summarizes medical reports into structured, easy-to-understand insights. It helps doctors quickly interpret reports and enables patients to understand their health in simple language.
 
 
-STEP 2 — Start the app
-────────────────────────
-    python app.py
 
-You will see:
-    Server running at: http://localhost:5000
+##  Features
 
-
-STEP 3 — Open in browser
-──────────────────────────
-Go to:  http://localhost:5000
-
-That's it!
-
-
-═══════════════════════════════════════════════════
-FREE API KEYS  (takes ~30 seconds each)
-═══════════════════════════════════════════════════
-
-GOOGLE GEMINI  (recommended — best free tier)
-  → https://aistudio.google.com/app/apikey
-  → Click "Create API Key"
-  → Free: 1,500 requests/day, no credit card
-
-GROQ  (very fast)
-  → https://console.groq.com/keys
-  → Click "Create API Key"
-  → Free: 30 requests/min, no credit card
+*  Upload medical reports (PDF)
+*  Automatic report type detection (Lab, Prescription, Discharge Summary, etc.)
+*  AI-powered extraction using LLM (Groq)
+*  Structured data extraction:
+* Patient details
+* Diagnoses
+* Lab results
+* Medications
+* Clinical findings
+*  Rule-based validation engine:
+* Detects abnormal values
+* Infers conditions (e.g., Anaemia, Diabetes)
+* Removes incorrect AI outputs
+*  Risk level classification (Low / Moderate / High / Critical)
+*  Multi-language support (9 Indian languages)
+*  Professional PDF report generation
+*  Chatbot to ask questions about reports
+*  Persistent audit logging using SQLite
 
 
-═══════════════════════════════════════════════════
-FOLDER STRUCTURE
-═══════════════════════════════════════════════════
 
-mediraksha/
-├── app.py               ← Run this file
-├── config.py            ← Environment config
-├── requirements.txt     ← Python dependencies
-├── README.txt           ← This file
-├── .env.example         ← Example environment values
-├── modules/             ← Backend modules
-│   ├── audit.py         ← SQLite audit log persistence
-│   ├── detection.py     ← Report type detection
-│   ├── extraction.py    ← PDF text extraction
-│   ├── pdf_generator.py ← PDF export generation
-│   ├── prompts.py       ← AI prompt templates
-│   ├── providers.py     ← Groq API calls
-│   ├── routes.py        ← Flask routes
-│   ├── sanitizer.py     ← JSON parsing + sanitization
-│   ├── translation.py   ← Translation helpers
-│   └── validation.py    ← Lab validation + post-processing
-├── templates/
-│   └── index.html       ← Web UI (auto-served)
-└── data/                ← SQLite DB created at runtime
+##  How It Works
+
+1. User uploads a medical report (PDF)
+2. System detects report type automatically
+3. Extracted text is processed using AI (Groq LLM)
+4. Structured data is generated
+5. Post-processing engine validates results using medical rules
+6. Summary is generated and translated (if needed)
+7. Report is stored in audit log database
+8. User can interact using chatbot or download PDF
 
 
-═══════════════════════════════════════════════════
-TROUBLESHOOTING
-═══════════════════════════════════════════════════
 
-Problem              | Fix
-─────────────────────|───────────────────────────────
-ModuleNotFoundError  | pip install -r requirements.txt
-Port 5000 in use     | Change port=5000 to port=5001
-                     | in app.py (last line)
-Invalid API key      | Double-check key, re-save it
-No internet          | Check your network connection
-PDF won't download   | Make sure app.py is still running
+##  Project Structure
 
 
-Press Ctrl+C in the terminal to stop the server.
+Mediraksha/
+│
+├── app.py                 # App factory & entry point
+├── config.py              # Environment configuration
+├── modules/               # Core logic modules
+│   ├── audit.py
+│   ├── detection.py
+│   ├── extraction.py
+│   ├── pdf_generator.py
+│   ├── prompts.py
+│   ├── providers.py
+│   ├── routes.py
+│   ├── sanitizer.py
+│   ├── translation.py
+│   ├── validation.py
+│
+├── templates/             # Frontend HTML
+├── data/                  # SQLite database (audit logs)
+├── requirements.txt
+└── README.md
+```
+
+
+##  Setup & Installation
+
+### 1. Clone the repository
+
+```
+git clone https://github.com/Rigveda1610/Mediraksha.git
+cd Mediraksha
+```
+
+---
+
+### 2. Create virtual environment (recommended)
+
+```
+python -m venv venv
+```
+
+Activate:
+
+Windows:
+
+```
+venv\Scripts\activate
+```
+
+---
+
+### 3. Install dependencies
+
+```
+pip install -r requirements.txt
+```
+
+---
+
+### 4. Configure environment variables
+
+Create a `.env` file:
+
+```
+GROQ_API_KEY=your_groq_api_key
+SECRET_KEY=your_secret_key
+```
+
+---
+
+### 5. Run the application
+
+```
+python app.py
+```
+
+---
+
+### 6. Open in browser
+
+```
+http://localhost:5000
+```
+
+---
+
+##  API Endpoints
+
+* `/analyze` → Analyze medical report
+* `/ask` → Chatbot Q&A
+* `/audit` → View audit logs
+* `/download_pdf` → Download report
+* `/health` → System health check
+
+
+
+##  Tech Stack
+
+* Python (Flask)
+* Groq API (LLM)
+* SQLite (Audit Logs)
+* HTML/CSS (Frontend)
+* PDF Processing Libraries
+
+---
+
+##  Key Highlights
+
+* Modular backend architecture (production-ready)
+* SQLite-based persistent audit logging
+* Rule-based medical validation engine
+* Multi-language patient-friendly summaries
+* AI + deterministic validation hybrid system
+
+---
+
+##  Future Improvements
+
+* OpenAI integration (multi-provider AI support)
+* Doctor dashboard with patient history
+* Graph-based trend analysis
+* EMR/Hospital system integration
+* Enhanced security & authentication
+
+---
+
+##  Author
+
+**Rigveda Mhatre**
+
+---
+
+## ⭐ If you like this project
+
+Give it a ⭐ on GitHub!
