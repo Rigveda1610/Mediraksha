@@ -1,7 +1,7 @@
 import logging
 import re
 
-from modules.providers import groq_chat
+from modules.providers import chat_ai
 
 logger = logging.getLogger(__name__)
 
@@ -25,10 +25,10 @@ LANG_NATIVE = {
 
 
 def _raw_translate(provider, api_key, prompt):
-    """Translation via Groq — Groq is the only provider."""
-    return groq_chat(api_key,
-                     "You are a professional medical translator. Return ONLY the translated text.",
-                     prompt, max_tokens=1500)
+    """Translation via selected AI provider."""
+    return chat_ai(provider, api_key,
+                   "You are a professional medical translator. Return ONLY the translated text.",
+                   prompt, max_tokens=1500)
 
 
 def translate_all_fields(provider, api_key, result, lang_name):

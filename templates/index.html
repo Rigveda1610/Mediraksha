@@ -79,7 +79,7 @@ header{padding:22px 0 16px;border-bottom:1px solid var(--border)}
   border-radius:13px;padding:18px 18px;margin-bottom:18px}
 .panel-title{font-size:.72rem;font-weight:600;color:var(--muted);
   letter-spacing:.1em;text-transform:uppercase;margin-bottom:13px}
-.prov-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:15px}
+.prov-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:15px}
 @media(max-width:520px){.prov-grid{grid-template-columns:1fr}}
 .prov-card{border:1.5px solid var(--border);border-radius:10px;padding:11px 13px;
   cursor:pointer;transition:all .22s;background:transparent;position:relative}
@@ -91,7 +91,7 @@ header{padding:22px 0 16px;border-bottom:1px solid var(--border)}
   align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
 .prov-ico.g{background:linear-gradient(135deg,#4285f4,#34a853)}
 .prov-ico.q{background:linear-gradient(135deg,#f55036,#ff8a00)}
-.prov-ico.c{background:linear-gradient(135deg,#c9784a,#d4956a)}
+.prov-ico.o{background:linear-gradient(135deg,#10a37f,#1a7f64)}
 .prov-name{font-size:.83rem;font-weight:600}
 .prov-badge{font-size:.6rem;font-weight:700;padding:1px 6px;border-radius:4px;
   letter-spacing:.06em;text-transform:uppercase;margin-top:1px;display:inline-block}
@@ -309,15 +309,15 @@ footer span{color:var(--teal-l);font-weight:500}
       <div class="logo-icon">🩺</div>
       <div><h1>Medi<span>Raksha</span></h1><p>AI Medical Intelligence</p></div>
     </div>
-    <div class="badge"><div class="dot"></div><span id="badgeTxt">Gemini AI Ready</span></div>
+    <div class="badge"><div class="dot"></div><span id="badgeTxt">Groq AI Ready</span></div>
   </div>
 </header>
 
 <!-- HERO -->
 <section class="hero">
-  <div class="hero-tag">✦ Free AI APIs · Runs on Your Computer</div>
+  <div class="hero-tag">✦ AI Providers · Runs on Your Computer</div>
   <h2>Understand Any Medical Report with <em>AI Precision</em></h2>
-  <p>Choose a free AI provider, upload your report, and get an accurate structured summary with a downloadable PDF — all processed locally.</p>
+  <p>Choose an AI provider, upload your report, and get an accurate structured summary with a downloadable PDF — all processed locally.</p>
 </section>
 
 <!-- STEPS -->
@@ -345,35 +345,43 @@ footer span{color:var(--teal-l);font-weight:500}
 
     <!-- PROVIDER PANEL -->
     <div class="api-panel">
-      <div class="panel-title">🔑 Step 1 — Choose AI Provider &amp; Enter Free API Key</div>
+      <div class="panel-title">🔑 Step 1 — Choose AI Provider &amp; Enter API Key</div>
 
       <div class="prov-grid">
-        <!-- Groq Only -->
-        <div class="prov-card sel" id="pc-groq" style="grid-column:1/-1;max-width:360px;margin:0 auto">
+        <div class="prov-card sel" onclick="selProv('groq')" id="provGroq">
           <div class="sel-dot"></div>
           <div class="prov-top">
-            <div class="prov-ico q">⚡</div>
-            <div>
-              <div class="prov-name">Groq — Llama 3.3 70B</div>
-              <span class="prov-badge free">FREE</span>
-            </div>
+            <span class="prov-ico q">⚡</span>
+            <span class="prov-name">Groq</span>
           </div>
+          <span class="prov-badge free">FREE</span>
           <div class="prov-model">llama-3.3-70b-versatile</div>
           <div class="prov-limit">30 req/min · Fast · No credit card needed</div>
+        </div>
+        <div class="prov-card" onclick="selProv('openai')" id="provOpenai">
+          <span class="sel-dot"></span>
+          <div class="prov-top">
+            <span class="prov-ico o">🤖</span>
+            <span class="prov-name">OpenAI</span>
+          </div>
+          <span class="prov-badge paid">API KEY</span>
+          <div class="prov-model">gpt-5-mini</div>
+          <div class="prov-limit">Pay-as-you-go pricing</div>
         </div>
       </div>
 
       <div class="key-row">
         <input type="password" id="keyInp" class="key-inp"
-               placeholder="Paste your Groq API key here…" autocomplete="off"/>
+               placeholder="Enter your Groq API key" autocomplete="off"/>
         <button class="icon-btn" onclick="toggleVis()" title="Show/hide key">👁</button>
         <button class="save-btn" onclick="saveKey()">Save Key</button>
       </div>
       <div class="key-ok" id="keyOk">✅ Key saved for this session</div>
       <div class="key-hint" id="keyHint">
-        Get your <b>free</b> Groq key at
+        Get a key: Groq →
         <a href="https://console.groq.com/keys" target="_blank">console.groq.com/keys</a>
-        — takes 30 seconds, no credit card needed.
+        | OpenAI →
+        <a href="https://platform.openai.com/api-keys" target="_blank">platform.openai.com/api-keys</a>
       </div>
     </div>
 
@@ -577,7 +585,7 @@ footer span{color:var(--teal-l);font-weight:500}
 
 <footer>
   <p>© 2025 <span>MediRaksha</span> — AI Medical Report Summarization</p>
-  <p style="font-size:.7rem">Flask · Groq · Llama 3.3 · ReportLab · 9 Indian Languages</p>
+  <p style="font-size:.7rem">Flask · Groq · OpenAI · ReportLab · 9 Indian Languages</p>
 </footer>
 </div>
 
@@ -587,35 +595,53 @@ footer span{color:var(--teal-l);font-weight:500}
 
 <script>
 // ─── STATE ───────────────────────────────
-const provider = 'groq';   // Groq only — fixed
+let selectedProvider = 'groq';
 let langCode   = 'en';
 let langName   = 'English';
 let resultData = null;
 let resultLang = 'English';
+let activeReportProvider = 'groq';
 
-// ─── API KEY (Groq only) ─────────────────
+function providerLabel(provider = selectedProvider) {
+  return provider === 'openai' ? 'OpenAI' : 'Groq';
+}
+
+function storageKey(provider = selectedProvider) {
+  return provider === 'openai' ? 'openai_key' : 'groq_key';
+}
+
+function selProv(provider) {
+  selectedProvider = provider === 'openai' ? 'openai' : 'groq';
+  document.getElementById('provGroq').classList.toggle('sel', selectedProvider === 'groq');
+  document.getElementById('provOpenai').classList.toggle('sel', selectedProvider === 'openai');
+  document.getElementById('badgeTxt').textContent = `${providerLabel()} AI Ready`;
+  document.getElementById('keyInp').placeholder =
+    selectedProvider === 'openai' ? 'Enter your OpenAI API key' : 'Enter your Groq API key';
+  const saved = sessionStorage.getItem(storageKey()) || '';
+  document.getElementById('keyInp').value = saved;
+  document.getElementById('keyOk').classList.toggle('show', !!saved);
+}
+
+// ─── API KEY ─────────────────────────────
 function saveKey() {
   const k = document.getElementById('keyInp').value.trim();
-  if (!k) { toast('⚠️','Paste your Groq API key first'); return; }
-  sessionStorage.setItem('groq_key', k);
+  if (!k) { toast('⚠️',`Paste your ${providerLabel()} API key first`); return; }
+  sessionStorage.setItem(storageKey(), k);
   document.getElementById('keyOk').classList.add('show');
-  toast('✅','Groq key saved for this session!');
+  toast('✅',`${providerLabel()} key saved for this session!`);
 }
 function toggleVis() {
   const i = document.getElementById('keyInp');
   i.type = i.type === 'password' ? 'text' : 'password';
 }
-function getKey() {
-  return document.getElementById('keyInp').value.trim() ||
-         sessionStorage.getItem('groq_key') || '';
+function getKey(provider = selectedProvider) {
+  const input = document.getElementById('keyInp').value.trim();
+  if (provider === selectedProvider && input) return input;
+  return sessionStorage.getItem(storageKey(provider)) || '';
 }
 // Restore saved key on page load
 window.addEventListener('DOMContentLoaded', () => {
-  const saved = sessionStorage.getItem('groq_key') || '';
-  if (saved) {
-    document.getElementById('keyInp').value = saved;
-    document.getElementById('keyOk').classList.add('show');
-  }
+  selProv('groq');
   loadAudit();
 });
 
@@ -692,15 +718,17 @@ function showErr(msg) {
 async function runAnalysis() {
   const txt  = document.getElementById('reportTxt').value.trim();
   const file = document.getElementById('fileInput').files[0];
-  const key  = getKey();
+  const key  = getKey(selectedProvider);
+  const providerName = providerLabel();
 
-  if (!key)         { showErr('Please enter and save your Groq API key first (Step 1).'); return; }
+  if (!key)         { showErr(`Please enter and save your ${providerName} API key first (Step 1).`); return; }
   if (!txt && !file){ showErr('Please upload a file or paste report text (Step 2).'); return; }
 
   showErr('');
   document.getElementById('inputSec').style.display = 'none';
   document.getElementById('loadSec').classList.add('show');
-  document.getElementById('aiStep').textContent = 'Groq (Llama 3.3): parsing clinical data';
+  document.getElementById('aiStep').textContent =
+    selectedProvider === 'openai' ? 'OpenAI (gpt-5-mini): parsing clinical data' : 'Groq (Llama 3.3): parsing clinical data';
   document.getElementById('transLangLabel').textContent = langName;
   setStep(2);
   resultData = null;
@@ -708,10 +736,10 @@ async function runAnalysis() {
 
   try {
     setProg(1, 15, 'Reading document…'); await sleep(300);
-    setProg(2, 32, 'Groq analyzing report…'); setStep(2);
+    setProg(2, 32, `${providerName} analyzing report…`); setStep(2);
 
     const fd = new FormData();
-    fd.append('provider',  'groq');
+    fd.append('provider',  selectedProvider);
     fd.append('api_key',   key);
     fd.append('lang_code', langCode);
     fd.append('lang_name', langName);
@@ -727,6 +755,7 @@ async function runAnalysis() {
 
     resultData = json.data;
     resultLang = json.lang_name;
+    activeReportProvider = selectedProvider;
 
     setProg(3, 72, 'Summary generated…'); setStep(3); await sleep(280);
     setProg(4, 86, langCode==='en' ? 'English output ready…' : `Translated to ${langName}…`); await sleep(280);
@@ -938,8 +967,8 @@ async function sendQuestion() {
   const inp = document.getElementById('qaInp');
   const q   = inp.value.trim();
   if (!q) return;
-  const key = getKey();
-  if (!key) { toast('⚠️','Enter your Groq API key first'); return; }
+  const providerForQA = activeReportProvider || selectedProvider;
+  const key = getKey(providerForQA);
 
   inp.value = '';
   const box = document.getElementById('qaMsgs');
